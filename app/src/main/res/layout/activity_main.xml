@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity"
+    android:background="@color/colorPrimary">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="30sp"
+        android:text="Ingresa tu identificación"
+        android:id="@+id/txtvId"
+        android:textColor="@color/colorDarkText"
+        android:layout_marginLeft="40dp"
+        android:layout_marginStart="40dp"
+        android:layout_marginTop="20dp"
+        android:textStyle="bold"
+        >
+    </TextView>
+    <EditText
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/txtvId"
+        android:hint="Identificación"
+        android:textColor="@color/colorDarkText"
+        android:inputType="number"
+        android:textSize="30sp"
+        android:layout_marginTop="30dp"
+        android:id="@+id/txtId"
+        >
+    </EditText>
+
+    <Button
+        android:textColor="@color/colorDarkText"
+        android:layout_width="270dp"
+        android:layout_height="60dp"
+        android:shadowColor="#A8A8A8"
+        android:shadowDx="0"
+        android:shadowDy="0"
+        android:shadowRadius="5"
+        android:id="@+id/btnInsert"
+        android:layout_below="@+id/txtId"
+        android:layout_marginLeft="70dp"
+        android:layout_marginStart="70dp"
+        android:layout_marginTop="60dp"
+        android:background="@color/colorText"
+        android:text="Ingresar"
+        android:textSize="30sp"/>
+
+    <EditText
+        android:id="@+id/txtName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Ingrese su nombre"
+        android:inputType="text"
+        android:textSize="30sp"
+        android:visibility="invisible"
+        >
+        <requestFocus />
+    </EditText>
+
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="420dp"
+        android:contentDescription="BetRush logo"
+        android:layout_below="@+id/btnInsert"
+        android:layout_marginTop="45dp"
+        android:src="@drawable/betrush"/>
+</RelativeLayout>

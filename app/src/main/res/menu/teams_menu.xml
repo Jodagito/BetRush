@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@+id/menuNewTeam"
+        android:title="Agregar o Buscar Equipo"
+        app:showAsAction="never"/>
+
+    <item android:id="@+id/menuBets"
+        android:title="Apuestas"
+        android:iconTint="@color/colorDarkText"
+        app:showAsAction="ifRoom"/>
+</menu>

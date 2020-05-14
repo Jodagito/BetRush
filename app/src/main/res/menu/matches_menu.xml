@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@+id/menuNewMatch"
+        android:title="Crear Partido"
+        app:showAsAction="never"/>
+
+    <item android:id="@+id/menuFilterWinMatches"
+        android:title="Filtrar Victorias"/>
+
+    <item android:id="@+id/menuTeamStatistics"
+        android:title="Estadísticas del Equipo"/>
+</menu>
