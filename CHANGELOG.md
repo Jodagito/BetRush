@@ -1,0 +1,25 @@
+##  1.0.0 (2020-05-14)
+
+* chore: android project manifest file ([016d72c](https://github.com/Jodagito/BetRush/commit/016d72c))
+* chore: bumped configuration file ([67ba7a9](https://github.com/Jodagito/BetRush/commit/67ba7a9))
+* chore: gitignore file ([3b21caa](https://github.com/Jodagito/BetRush/commit/3b21caa))
+* chore: project resources ([8ee89e6](https://github.com/Jodagito/BetRush/commit/8ee89e6))
+* feat: bet class ([270b7d1](https://github.com/Jodagito/BetRush/commit/270b7d1))
+* feat: bet storage ([4ec3a31](https://github.com/Jodagito/BetRush/commit/4ec3a31))
+* feat: bets activity ([9f8f0d3](https://github.com/Jodagito/BetRush/commit/9f8f0d3))
+* feat: bettor class ([5d04e72](https://github.com/Jodagito/BetRush/commit/5d04e72))
+* feat: bettors storage ([a2866ca](https://github.com/Jodagito/BetRush/commit/a2866ca))
+* feat: main screen ([043c841](https://github.com/Jodagito/BetRush/commit/043c841))
+* feat: matches activity ([44f0e0c](https://github.com/Jodagito/BetRush/commit/44f0e0c))
+* feat: matches class ([6b090fb](https://github.com/Jodagito/BetRush/commit/6b090fb))
+* feat: matches storage ([1646b92](https://github.com/Jodagito/BetRush/commit/1646b92))
+* feat: teams activity ([c1ab1ff](https://github.com/Jodagito/BetRush/commit/c1ab1ff))
+* feat: teams class ([ec1353f](https://github.com/Jodagito/BetRush/commit/ec1353f))
+* feat: teams storage ([b62c4df](https://github.com/Jodagito/BetRush/commit/b62c4df))
+* test: project automatic tests ([1d6ecfd](https://github.com/Jodagito/BetRush/commit/1d6ecfd))
+* build: gradle configuration files ([83bb0f4](https://github.com/Jodagito/BetRush/commit/83bb0f4))
+* build: gradle library ([347a020](https://github.com/Jodagito/BetRush/commit/347a020))
+* build: project gradle build file ([c81e1a8](https://github.com/Jodagito/BetRush/commit/c81e1a8))
+
+
+
