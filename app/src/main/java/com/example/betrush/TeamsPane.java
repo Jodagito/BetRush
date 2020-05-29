@@ -174,19 +174,12 @@ public class TeamsPane extends AppCompatActivity {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
                                 String removedTeam = "";
-                                try{
-                                    removedTeam = teams.removeTeam(listViewTeams.getItemAtPosition(final_position).toString());
-                                    successfulDeletion(removedTeam);
-                                }
-                                catch(Resources.NotFoundException e){
-                                    unsuccessfulDeletion(removedTeam);
-                                }
-                                catch(IOException e){
-                                    askForPermissions();
-                                }
-                                catch(JSONException e){
-                                    unsuccessfulDeletion(removedTeam);
-                                }
+                                removedTeam = listViewTeams.getItemAtPosition(final_position).toString();
+                                RealmResults<Team> teamToRemove = realm.where(Team.class).equalTo("name", removedTeam).findAll();
+                                realm.beginTransaction();
+                                teamToRemove.deleteAllFromRealm();
+                                realm.commitTransaction();
+                                successfulDeletion(removedTeam);
                             }
                         })
                 .setTitle("Confirmación");
