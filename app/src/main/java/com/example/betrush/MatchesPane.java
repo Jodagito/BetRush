@@ -209,8 +209,10 @@ public class MatchesPane extends AppCompatActivity {
                             public void onClick(DialogInterface dialog, int which) {
                                 try {
                                     BetsFile bets = new BetsFile();
-                                    matches.playMatch(selectedMatch);
-                                    bets.createBet(finalBetValue, finalForecast, MainActivity.insertedId, selectedMatch.winner);
+                                    realm.beginTransaction();
+                                    selectedMatch.playMatch();
+                                    bets.createBet(finalBetValue, finalForecast, MainActivity.insertedId, selectedMatch.getWinner());
+                                    realm.commitTransaction();
                                     successfulBetInsertion();
                                 }
                                 catch(JSONException e){
