@@ -8,7 +8,6 @@ import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
 import android.content.DialogInterface;
 import android.content.res.Configuration;
-import android.content.res.Resources;
 import android.os.Bundle;
 import android.text.InputType;
 import android.view.Menu;
@@ -24,24 +23,26 @@ import android.widget.TimePicker;
 import android.widget.Toast;
 import org.json.JSONException;
 import java.io.IOException;
-import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Locale;
+import io.realm.Realm;
+import io.realm.RealmList;
+import io.realm.RealmResults;
 
 public class MatchesPane extends AppCompatActivity {
     private ListView listViewMatches;
-    private MatchesFile matches;
     private Toolbar matchesToolbar;
     private String visitantTeam = "";
     private String matchDate = "";
     private final Calendar calendar = Calendar.getInstance();
     private SwipeRefreshLayout swipeRefreshMatches;
-    private ArrayList<String> matchesDates = new ArrayList<>();
+    private ArrayList<String> matchesTeams;
     private ArrayAdapter<String> adapter;
     private String selectedTeam = "";
     private String[] teams;
     private Match selectedMatch;
+    private Realm realm;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,21 +60,12 @@ public class MatchesPane extends AppCompatActivity {
         setSupportActionBar(matchesToolbar);
         getSupportActionBar().setTitle("Partidos");
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        try{
-            matches = new MatchesFile();
-        }
-        catch (JSONException e){
-            Toast.makeText(this, "Ocurrió un error leyendo el archivo de partidos", Toast.LENGTH_LONG);
-        }
-        catch(IOException e){
-            askForPermissions();
-        }
         loadMatches();
         listViewMatches.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                String matchDateSelected = listViewMatches.getItemAtPosition(position).toString();
-                selectedMatch = matches.getMatchByDate(matchDateSelected);
+                String[] matchTeams = listViewMatches.getItemAtPosition(position).toString().split(" VS ");
+                selectedMatch = realm.where(Match.class).equalTo("teams.name", matchTeams[0]).equalTo("teams.name", matchTeams[1]).findAll().first();
                 String matchAsString = getMatchAsString(selectedMatch);
                 generateMatchDetailDialog(matchAsString);
             }
@@ -81,6 +73,8 @@ public class MatchesPane extends AppCompatActivity {
         listViewMatches.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
             public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+                String[] matchTeams = listViewMatches.getItemAtPosition(position).toString().split(" VS ");
+                selectedMatch = realm.where(Match.class).in("teams", matchTeams).findAll().first();
                 generateDeleteConfirmationDialog(position);
                 return true;
             }
@@ -105,7 +99,13 @@ public class MatchesPane extends AppCompatActivity {
         }
         else if(item.getItemId() == R.id.menuFilterWinMatches){
             swipeRefreshMatches.setRefreshing(true);
-            adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, matches.getWinMatchesDates(selectedTeam));
+            ArrayList<String> wonMatches = new ArrayList();
+            RealmResults<Match> wonMatchesQuery = realm.where(Match.class).equalTo("winner", selectedTeam).findAll();
+            for(Match match : wonMatchesQuery){
+                RealmList<Team> matchTeams = match.getTeams();
+                wonMatches.add(matchTeams.get(0).name + " VS " + matchTeams.get(1).name);
+            }
+            adapter = new ArrayAdapter(this, android.R.layout.simple_list_item_1, wonMatches);
             listViewMatches.setAdapter(adapter);
             swipeRefreshMatches.setRefreshing(false);
         }
@@ -117,9 +117,9 @@ public class MatchesPane extends AppCompatActivity {
 
     private String getMatchAsString(Match match) {
         String matchAsString = "";
-        if (match.played){
-            matchAsString = "RESULTADO\t\t" + match.results[0] + "\t  - \t" + match.results[1] + "\n\n";
-            matchAsString += "GANADOR\t\t" + match.winner.toUpperCase();
+        if (match.getPlayed()){
+            matchAsString = "RESULTADO\t\t" + match.getResults().get(0) + "\t  - \t" + match.getResults().get(1) + "\n\n";
+            matchAsString += "GANADOR\t\t" + match.getWinner().toUpperCase();
         }
         return matchAsString;
     }
@@ -128,16 +128,21 @@ public class MatchesPane extends AppCompatActivity {
         listViewMatches = findViewById(R.id.listViewMatches);
         matchesToolbar = findViewById(R.id.matchesToolbar);
         swipeRefreshMatches = findViewById(R.id.swipeRefreshMatches);
+        realm = Realm.getDefaultInstance();
     }
 
     private void generateSelectBetTeamsDialog(Match selectedMatch){
-        final String[] matchTeams = selectedMatch.teams;
+        final RealmList<Team> matchTeams = selectedMatch.getTeams();
+        String[] teamsString = new String[matchTeams.size()];
+        for (int matchTeam = 0; matchTeam < matchTeams.size(); matchTeam++){
+            teamsString[matchTeam] = matchTeams.get(matchTeam).name;
+        }
         final AlertDialog.Builder dialogWindow = new AlertDialog.Builder(MatchesPane.this);
-        dialogWindow.setItems(matchTeams, new DialogInterface.OnClickListener() {
+        dialogWindow.setItems(teamsString, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 dialog.dismiss();
-                String forecast = matchTeams[which];
+                String forecast = matchTeams.get(which).name;
                 if (forecast.isEmpty()){
                     loadMatches();
                 }
@@ -159,11 +164,21 @@ public class MatchesPane extends AppCompatActivity {
 
     private void generateTeamStatisticsDialog() {
         AlertDialog.Builder dialogWindow = new AlertDialog.Builder(MatchesPane.this);
-        dialogWindow.setMessage(matches.getTeamStatistics(selectedTeam))
+        dialogWindow.setMessage(getTeamStatistics(selectedTeam))
                 .setCancelable(true);
         dialogWindow.setTitle(selectedTeam.toUpperCase());
         dialogWindow.create();
         dialogWindow.show();
+    }
+
+    public String getTeamStatistics(String name){
+        int totalMatches = realm.where(Match.class).equalTo("teams.name", name).findAll().size();
+        int totalVictories = realm.where(Match.class).equalTo("winner", name).findAll().size();
+        int totalLosses = realm.where(Match.class).notEqualTo("winner", name).equalTo("teams.name", name).findAll().size();
+        String teamStatistics = "PARTIDOS JUGADOS\t\t" + totalMatches + "\n\n";
+        teamStatistics += "PARTIDOS GANADOS\t\t" + totalVictories + "\n\n";
+        teamStatistics += "PARTIDOS PERDIDOS\t\t" + totalLosses;
+        return teamStatistics;
     }
 
     private void generateAskBetValueDialog(AlertDialog.Builder dialogWindow, String forecast){
@@ -215,8 +230,10 @@ public class MatchesPane extends AppCompatActivity {
                             public void onClick(DialogInterface dialog, int which) {
                                 try {
                                     BetsFile bets = new BetsFile();
-                                    matches.playMatch(selectedMatch);
-                                    bets.createBet(finalBetValue, finalForecast, MainActivity.insertedId, selectedMatch.winner);
+                                    realm.beginTransaction();
+                                    selectedMatch.playMatch();
+                                    bets.createBet(finalBetValue, finalForecast, MainActivity.insertedId, selectedMatch.getWinner());
+                                    realm.commitTransaction();
                                     successfulBetInsertion();
                                 }
                                 catch(JSONException e){
@@ -236,7 +253,7 @@ public class MatchesPane extends AppCompatActivity {
         AlertDialog.Builder dialogWindow = new AlertDialog.Builder(MatchesPane.this);
         dialogWindow.setMessage(matchAsString)
                 .setCancelable(true);
-        if (!selectedMatch.played){
+        if (!selectedMatch.getPlayed()){
             dialogWindow.setPositiveButton("Apostar",
                     new DialogInterface.OnClickListener() {
                         @Override
@@ -245,7 +262,7 @@ public class MatchesPane extends AppCompatActivity {
                         }
                     });
         }
-        dialogWindow.setTitle(selectedMatch.teams[0] + " VS " + selectedMatch.teams[1]);
+        dialogWindow.setTitle(selectedMatch.getTeams().get(0).name + " VS " + selectedMatch.getTeams().get(1).name);
         dialogWindow.create();
         dialogWindow.show();
     }
@@ -320,19 +337,13 @@ public class MatchesPane extends AppCompatActivity {
                         new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                try {
-                                    matches.createMatch(new String[]{selectedTeam, visitantTeam}, matchDate);
-                                    successfulMatchInsertion();
-                                }
-                                catch(InvalidParameterException e){
-                                    unsuccessfulMatchDateInsertion();
-                                }
-                                catch(JSONException e){
-                                    unsuccessfulMatchInsertion();
-                                }
-                                catch(IOException e){
-                                    askForPermissions();
-                                }
+                                int id = realm.where(Match.class).findAll().size();
+                                realm.beginTransaction();
+                                Match newMatch = realm.createObject(Match.class, id);
+                                newMatch.setDate(matchDate);
+                                newMatch.setTeams(new RealmList(realm.where(Team.class).equalTo("name", selectedTeam).findFirst(), realm.where(Team.class).equalTo("name", visitantTeam).findFirst()));
+                                realm.commitTransaction();
+                                successfulMatchInsertion();
                             }
                         })
                 .setTitle("Confirmación");
@@ -355,16 +366,11 @@ public class MatchesPane extends AppCompatActivity {
                         new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                try{
-                                    matches.removeMatch(matches.getMatchByDate(listViewMatches.getItemAtPosition(final_position).toString()).id);
-                                    successfulDeletion();
-                                }
-                                catch(Resources.NotFoundException e){
-                                    unsuccessfulDeletion();
-                                }
-                                catch(IOException e){
-                                    askForPermissions();
-                                }
+                                RealmResults<Match> matchToRemove = realm.where(Match.class).equalTo("id", selectedMatch.getId()).findAll();
+                                realm.beginTransaction();
+                                matchToRemove.deleteAllFromRealm();
+                                realm.commitTransaction();
+                                successfulDeletion();
                             }
                         })
                 .setTitle("Confirmación");
@@ -413,13 +419,13 @@ public class MatchesPane extends AppCompatActivity {
 
     private void loadMatches(){
         swipeRefreshMatches.setRefreshing(true);
-        try{
-            matchesDates = matches.getMatchesDates(selectedTeam);
+        matchesTeams = new ArrayList<>();
+        RealmResults<Match> matches = realm.where(Match.class).findAll();
+        for(Match match : matches){
+            RealmList<Team> matchTeams = match.getTeams();
+            matchesTeams.add(matchTeams.get(0).name + " VS " + matchTeams.get(1).name);
         }
-        catch(Exception e){
-            e.printStackTrace();
-        }
-        adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, matchesDates);
+        adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, matchesTeams);
         listViewMatches.setAdapter(adapter);
         swipeRefreshMatches.setRefreshing(false);
     }

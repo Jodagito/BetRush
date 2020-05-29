@@ -2,40 +2,80 @@ package com.example.betrush;
 
 import java.util.Random;
 
-public class Match {
-    public final String id;
-    public final String date;
-    public final String[] teams;
-    public final int[] results;
-    public String winner;
-    public Boolean played;
+import io.realm.RealmList;
+import io.realm.RealmObject;
+import io.realm.annotations.PrimaryKey;
 
-    public Match(String id, String date, String[] teams, int[] results, String winner, Boolean played){
+public class Match extends RealmObject {
+    @PrimaryKey
+    public int id;
+    private String date;
+    private RealmList<Team> teams;
+    private RealmList<Integer> results;
+    private String winner;
+    private Boolean played = false;
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
         this.id = id;
+    }
+
+    public String getDate() {
+        return date;
+    }
+
+    public void setDate(String date) {
         this.date = date;
+    }
+
+    public RealmList<Team> getTeams() {
+        return teams;
+    }
+
+    public void setTeams(RealmList<Team> teams) {
         this.teams = teams;
+    }
+
+    public RealmList<Integer> getResults() {
+        return results;
+    }
+
+    public void setResults(RealmList<Integer> results) {
         this.results = results;
+    }
+
+    public String getWinner() {
+        return winner;
+    }
+
+    public void setWinner(String winner) {
         this.winner = winner;
+    }
+
+    public Boolean getPlayed() {
+        return played;
+    }
+
+    public void setPlayed(Boolean played) {
         this.played = played;
     }
 
-    public Match(String id, String[] teams, String date){
-        this.id = id;
-        this.date = date;
-        this.teams = teams;
-        played = false;
-        results = new int[2];
+    private void setWinner(int winner){
+        this.winner = teams.get(winner).name;
     }
 
     public void playMatch(){
         Random random = new Random();
         int winner = -1;
-        results[0] = random.nextInt(6);
-        results[1] = random.nextInt(6);
-        if (results[0] > results[1]){
+        results.add(random.nextInt(6));
+        results.add(random.nextInt(6));
+        if (results.get(0) > results.get(1)){
             winner++;
         }
-        else if(results[0] < results[1]){
+        else if(results.get(0) < results.get(1)){
             winner += 2;
         }
         else if(winner < 0){
@@ -45,9 +85,5 @@ public class Match {
         }
         setWinner(winner);
         played = true;
-    }
-
-    private void setWinner(int winner){
-        this.winner = teams[winner];
     }
 }
