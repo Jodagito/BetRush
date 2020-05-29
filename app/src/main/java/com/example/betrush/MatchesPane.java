@@ -343,16 +343,11 @@ public class MatchesPane extends AppCompatActivity {
                         new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                try{
-                                    matches.removeMatch(matches.getMatchByDate(listViewMatches.getItemAtPosition(final_position).toString()).id);
-                                    successfulDeletion();
-                                }
-                                catch(Resources.NotFoundException e){
-                                    unsuccessfulDeletion();
-                                }
-                                catch(IOException e){
-                                    askForPermissions();
-                                }
+                                RealmResults<Match> matchToRemove = realm.where(Match.class).equalTo("id", selectedMatch.getId()).findAll();
+                                realm.beginTransaction();
+                                matchToRemove.deleteAllFromRealm();
+                                realm.commitTransaction();
+                                successfulDeletion();
                             }
                         })
                 .setTitle("Confirmación");
