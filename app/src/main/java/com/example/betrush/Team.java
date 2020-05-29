@@ -1,9 +1,15 @@
 package com.example.betrush;
 
-public class Team {
-    public final String name;
+import io.realm.RealmObject;
+import io.realm.annotations.PrimaryKey;
 
-    public Team(String name){
+public class Team extends RealmObject {
+    @PrimaryKey
+    public String name;
+    public String getName() {
+        return name;
+    }
+    public void setName(String name){
         this.name = name;
     }
 }
