@@ -83,7 +83,6 @@ public class TeamsPane extends AppCompatActivity {
     }
 
     private String[] teamsNamesAsArray(){
-        ArrayList<String> teamsNames = teams.getTeamsNames();
         teamsNames.remove(teamName);
         String[] teamsNamesAsArray = new String[teamsNames.size()];
         for (String name : teamsNames){
@@ -96,6 +95,7 @@ public class TeamsPane extends AppCompatActivity {
         listViewTeams = findViewById(R.id.listViewTeams);
         toolbar = findViewById(R.id.teamsToolbar);
         swipeRefreshTeams = findViewById(R.id.swipeRefreshTeams);
+        realm = Realm.getDefaultInstance();
     }
 
     private void generateTeamInputDialog() {
@@ -116,11 +116,11 @@ public class TeamsPane extends AppCompatActivity {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
                                 teamName = txtName.getText().toString();
-                                if (!teamName.isEmpty() && !teams.teamExists(teamName)){
+                                if (!teamName.isEmpty() && realm.where(Team.class).equalTo("name", teamName).findAll().isEmpty()){
                                     generateCreateConfirmationDialog();
                                 }
-                                else if(teams.teamExists(teamName)){
-                                    TeamsPane.this.adapter.getFilter().filter(teams.getTeam(teamName).name);
+                                else if(!realm.where(Team.class).equalTo("name", teamName).findAll().isEmpty()){
+                                    TeamsPane.this.adapter.getFilter().filter(teamName);
                                 }
                                 else{
                                     loadTeams();
