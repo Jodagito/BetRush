@@ -224,11 +224,10 @@ public class TeamsPane extends AppCompatActivity {
 
     private void loadTeams(){
         swipeRefreshTeams.setRefreshing(true);
-        try{
-            teamsNames = teams.getTeamsNames();
-        }
-        catch(Exception e){
-            e.printStackTrace();
+        teamsNames = new ArrayList<>();
+        RealmResults<Team> teams = realm.where(Team.class).findAll();
+        for (Team team : teams) {
+            teamsNames.add(team.name);
         }
         adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, teamsNames);
         listViewTeams.setAdapter(adapter);
