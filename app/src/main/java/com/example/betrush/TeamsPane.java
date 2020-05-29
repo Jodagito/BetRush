@@ -146,14 +146,11 @@ public class TeamsPane extends AppCompatActivity {
                         new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                try {
-                                    teamName = teamName.substring(0, 1).toUpperCase() + teamName.substring(1);
-                                    teams.createTeam(teamName);
-                                    successfulInsertion();
-                                }
-                                catch(Exception e){
-                                    askForPermissions();
-                                }
+                                teamName = teamName.substring(0, 1).toUpperCase() + teamName.substring(1);
+                                realm.beginTransaction();
+                                realm.createObject(Team.class, teamName);
+                                realm.commitTransaction();
+                                successfulInsertion();
                             }
                         })
                 .setTitle("Confirmación");
