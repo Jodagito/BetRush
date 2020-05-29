@@ -314,19 +314,13 @@ public class MatchesPane extends AppCompatActivity {
                         new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                try {
-                                    matches.createMatch(new String[]{selectedTeam, visitantTeam}, matchDate);
-                                    successfulMatchInsertion();
-                                }
-                                catch(InvalidParameterException e){
-                                    unsuccessfulMatchDateInsertion();
-                                }
-                                catch(JSONException e){
-                                    unsuccessfulMatchInsertion();
-                                }
-                                catch(IOException e){
-                                    askForPermissions();
-                                }
+                                int id = realm.where(Match.class).findAll().size();
+                                realm.beginTransaction();
+                                Match newMatch = realm.createObject(Match.class, id);
+                                newMatch.setDate(matchDate);
+                                newMatch.setTeams(new RealmList(realm.where(Team.class).equalTo("name", selectedTeam).findFirst(), realm.where(Team.class).equalTo("name", visitantTeam).findFirst()));
+                                realm.commitTransaction();
+                                successfulMatchInsertion();
                             }
                         })
                 .setTitle("Confirmación");
