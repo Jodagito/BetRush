@@ -7,7 +7,6 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.res.Resources;
 import android.os.Bundle;
 import android.text.InputType;
 import android.view.Menu;
@@ -19,20 +18,18 @@ import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
-
-import org.json.JSONException;
-
-import java.io.IOException;
 import java.util.ArrayList;
+import io.realm.Realm;
+import io.realm.RealmResults;
 
 public class TeamsPane extends AppCompatActivity {
     private ListView listViewTeams;
-    private TeamsFile teams;
     private Toolbar toolbar;
     private String teamName = "";
     private SwipeRefreshLayout swipeRefreshTeams;
     private ArrayList<String> teamsNames = new ArrayList<>();
     private ArrayAdapter<String> adapter;
+    private Realm realm;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,15 +39,6 @@ public class TeamsPane extends AppCompatActivity {
         setSupportActionBar(toolbar);
         getSupportActionBar().setTitle("Equipos");
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        try{
-            teams = new TeamsFile();
-        }
-        catch (JSONException e){
-            Toast.makeText(this, "Ocurrió un error leyendo el archivo de equipos", Toast.LENGTH_LONG);
-        }
-        catch(IOException e){
-            askForPermissions();
-        }
         loadTeams();
         listViewTeams.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -95,7 +83,6 @@ public class TeamsPane extends AppCompatActivity {
     }
 
     private String[] teamsNamesAsArray(){
-        ArrayList<String> teamsNames = teams.getTeamsNames();
         teamsNames.remove(teamName);
         String[] teamsNamesAsArray = new String[teamsNames.size()];
         for (String name : teamsNames){
@@ -108,6 +95,7 @@ public class TeamsPane extends AppCompatActivity {
         listViewTeams = findViewById(R.id.listViewTeams);
         toolbar = findViewById(R.id.teamsToolbar);
         swipeRefreshTeams = findViewById(R.id.swipeRefreshTeams);
+        realm = Realm.getDefaultInstance();
     }
 
     private void generateTeamInputDialog() {
@@ -128,11 +116,11 @@ public class TeamsPane extends AppCompatActivity {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
                                 teamName = txtName.getText().toString();
-                                if (!teamName.isEmpty() && !teams.teamExists(teamName)){
+                                if (!teamName.isEmpty() && realm.where(Team.class).equalTo("name", teamName).findAll().isEmpty()){
                                     generateCreateConfirmationDialog();
                                 }
-                                else if(teams.teamExists(teamName)){
-                                    TeamsPane.this.adapter.getFilter().filter(teams.getTeam(teamName).name);
+                                else if(!realm.where(Team.class).equalTo("name", teamName).findAll().isEmpty()){
+                                    TeamsPane.this.adapter.getFilter().filter(teamName);
                                 }
                                 else{
                                     loadTeams();
@@ -158,14 +146,11 @@ public class TeamsPane extends AppCompatActivity {
                         new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                try {
-                                    teamName = teamName.substring(0, 1).toUpperCase() + teamName.substring(1);
-                                    teams.createTeam(teamName);
-                                    successfulInsertion();
-                                }
-                                catch(Exception e){
-                                    askForPermissions();
-                                }
+                                teamName = teamName.substring(0, 1).toUpperCase() + teamName.substring(1);
+                                realm.beginTransaction();
+                                realm.createObject(Team.class, teamName);
+                                realm.commitTransaction();
+                                successfulInsertion();
                             }
                         })
                 .setTitle("Confirmación");
@@ -189,19 +174,12 @@ public class TeamsPane extends AppCompatActivity {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
                                 String removedTeam = "";
-                                try{
-                                    removedTeam = teams.removeTeam(listViewTeams.getItemAtPosition(final_position).toString());
-                                    successfulDeletion(removedTeam);
-                                }
-                                catch(Resources.NotFoundException e){
-                                    unsuccessfulDeletion(removedTeam);
-                                }
-                                catch(IOException e){
-                                    askForPermissions();
-                                }
-                                catch(JSONException e){
-                                    unsuccessfulDeletion(removedTeam);
-                                }
+                                removedTeam = listViewTeams.getItemAtPosition(final_position).toString();
+                                RealmResults<Team> teamToRemove = realm.where(Team.class).equalTo("name", removedTeam).findAll();
+                                realm.beginTransaction();
+                                teamToRemove.deleteAllFromRealm();
+                                realm.commitTransaction();
+                                successfulDeletion(removedTeam);
                             }
                         })
                 .setTitle("Confirmación");
@@ -236,11 +214,10 @@ public class TeamsPane extends AppCompatActivity {
 
     private void loadTeams(){
         swipeRefreshTeams.setRefreshing(true);
-        try{
-            teamsNames = teams.getTeamsNames();
-        }
-        catch(Exception e){
-            e.printStackTrace();
+        teamsNames = new ArrayList<>();
+        RealmResults<Team> teams = realm.where(Team.class).findAll();
+        for (Team team : teams) {
+            teamsNames.add(team.name);
         }
         adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, teamsNames);
         listViewTeams.setAdapter(adapter);
