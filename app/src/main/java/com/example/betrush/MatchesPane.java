@@ -60,21 +60,12 @@ public class MatchesPane extends AppCompatActivity {
         setSupportActionBar(matchesToolbar);
         getSupportActionBar().setTitle("Partidos");
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        try{
-            matches = new MatchesFile();
-        }
-        catch (JSONException e){
-            Toast.makeText(this, "Ocurrió un error leyendo el archivo de partidos", Toast.LENGTH_LONG);
-        }
-        catch(IOException e){
-            askForPermissions();
-        }
         loadMatches();
         listViewMatches.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                String matchDateSelected = listViewMatches.getItemAtPosition(position).toString();
-                selectedMatch = matches.getMatchByDate(matchDateSelected);
+                String[] matchTeams = listViewMatches.getItemAtPosition(position).toString().split(" VS ");
+                selectedMatch = realm.where(Match.class).equalTo("teams.name", matchTeams[0]).equalTo("teams.name", matchTeams[1]).findAll().first();
                 String matchAsString = getMatchAsString(selectedMatch);
                 generateMatchDetailDialog(matchAsString);
             }
@@ -82,6 +73,8 @@ public class MatchesPane extends AppCompatActivity {
         listViewMatches.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
             public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+                String[] matchTeams = listViewMatches.getItemAtPosition(position).toString().split(" VS ");
+                selectedMatch = realm.where(Match.class).in("teams", matchTeams).findAll().first();
                 generateDeleteConfirmationDialog(position);
                 return true;
             }

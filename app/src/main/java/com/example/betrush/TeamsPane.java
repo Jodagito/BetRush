@@ -39,15 +39,6 @@ public class TeamsPane extends AppCompatActivity {
         setSupportActionBar(toolbar);
         getSupportActionBar().setTitle("Equipos");
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        try{
-            teams = new TeamsFile();
-        }
-        catch (JSONException e){
-            Toast.makeText(this, "Ocurrió un error leyendo el archivo de equipos", Toast.LENGTH_LONG);
-        }
-        catch(IOException e){
-            askForPermissions();
-        }
         loadTeams();
         listViewTeams.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
