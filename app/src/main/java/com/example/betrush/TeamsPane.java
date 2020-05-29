@@ -7,7 +7,6 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.res.Resources;
 import android.os.Bundle;
 import android.text.InputType;
 import android.view.Menu;
@@ -19,20 +18,18 @@ import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
-
-import org.json.JSONException;
-
-import java.io.IOException;
 import java.util.ArrayList;
+import io.realm.Realm;
+import io.realm.RealmResults;
 
 public class TeamsPane extends AppCompatActivity {
     private ListView listViewTeams;
-    private TeamsFile teams;
     private Toolbar toolbar;
     private String teamName = "";
     private SwipeRefreshLayout swipeRefreshTeams;
     private ArrayList<String> teamsNames = new ArrayList<>();
     private ArrayAdapter<String> adapter;
+    private Realm realm;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

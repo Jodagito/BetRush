@@ -8,7 +8,6 @@ import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
 import android.content.DialogInterface;
 import android.content.res.Configuration;
-import android.content.res.Resources;
 import android.os.Bundle;
 import android.text.InputType;
 import android.view.Menu;
@@ -24,24 +23,26 @@ import android.widget.TimePicker;
 import android.widget.Toast;
 import org.json.JSONException;
 import java.io.IOException;
-import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Locale;
+import io.realm.Realm;
+import io.realm.RealmList;
+import io.realm.RealmResults;
 
 public class MatchesPane extends AppCompatActivity {
     private ListView listViewMatches;
-    private MatchesFile matches;
     private Toolbar matchesToolbar;
     private String visitantTeam = "";
     private String matchDate = "";
     private final Calendar calendar = Calendar.getInstance();
     private SwipeRefreshLayout swipeRefreshMatches;
-    private ArrayList<String> matchesDates = new ArrayList<>();
+    private ArrayList<String> matchesTeams;
     private ArrayAdapter<String> adapter;
     private String selectedTeam = "";
     private String[] teams;
     private Match selectedMatch;
+    private Realm realm;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
