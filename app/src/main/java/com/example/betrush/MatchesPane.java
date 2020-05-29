@@ -407,13 +407,13 @@ public class MatchesPane extends AppCompatActivity {
 
     private void loadMatches(){
         swipeRefreshMatches.setRefreshing(true);
-        try{
-            matchesDates = matches.getMatchesDates(selectedTeam);
+        matchesTeams = new ArrayList<>();
+        RealmResults<Match> matches = realm.where(Match.class).findAll();
+        for(Match match : matches){
+            RealmList<Team> matchTeams = match.getTeams();
+            matchesTeams.add(matchTeams.get(0).name + " VS " + matchTeams.get(1).name);
         }
-        catch(Exception e){
-            e.printStackTrace();
-        }
-        adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, matchesDates);
+        adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, matchesTeams);
         listViewMatches.setAdapter(adapter);
         swipeRefreshMatches.setRefreshing(false);
     }
